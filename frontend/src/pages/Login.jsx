@@ -18,52 +18,7 @@ const Login = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // const submitHandler = async (event) => {
-  //   event.preventDefault();
-  //   setLoading(true);
-
-  //   try {
-  //     // Validate required fields
-  //     if (!formData.name || !formData.email || !formData.password) {
-  //       throw new Error('Please fill all required fields');
-  //     }
-
-  //     const res = await fetch(`${BASE_URL}/auth/login`, {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json'
-  //       },
-  //       body: JSON.stringify(formData)
-  //     });
-
-  //     const result = await res.json();
-
-  //     if (!res.ok) {
-  //       throw new Error(result.message || 'Registration failed');
-  //     }
-
-
-  //     dispatch({
-  //       type: "LOGIN_SUCCESS",
-  //       payload: {
-  //         user: result.data,
-  //         token: result.token,
-  //         role: result.role,
-  //       },
-  //     });
-
-  //     console.log(result, "login data");
-  //     setLoading(false);
-  //     toast.success(result.message);
-  //     navigate('/home');
-
-
-  //   } catch (err) {
-  //     toast.error(err.message);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+   
   const submitHandler = async (event) => {
     event.preventDefault();
     setLoading(true);
