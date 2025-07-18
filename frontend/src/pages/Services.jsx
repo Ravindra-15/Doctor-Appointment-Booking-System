@@ -1,6 +1,6 @@
 import { services } from "../assets/data/services.js";
-// import ServiceCard from "../components/Services/ServiceCard";
-import ServiceCard from "../components/Services/Servicecard.jsx";
+ 
+import ServiceCard from "../components/Services/Servicecard";
 
 const Services = () => {
     return (
