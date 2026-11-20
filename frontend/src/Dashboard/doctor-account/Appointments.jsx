@@ -1,4 +1,4 @@
-import React from "react";
+import avatar from "../../assets/images/avatar-icon.png";
 
 const Appointments = ({ appointments }) => {
   return (
@@ -25,7 +25,7 @@ const Appointments = ({ appointments }) => {
                 {user ? (
                   <>
                     <img
-                      src={user.photo}
+                      src={user.photo || avatar}
                       className="w-10 h-10 rounded-full"
                       alt={user.name}
                     />
@@ -41,7 +41,7 @@ const Appointments = ({ appointments }) => {
                 )}
               </th>
 
-              <td className="px-6 py-4">{item.gender || "-"}</td>
+              <td className="px-6 py-4">{user?.gender || "-"}</td>
 
               <td className="px-6 py-4">
                 {item.isPaid ? (
@@ -57,11 +57,18 @@ const Appointments = ({ appointments }) => {
                 )}
               </td>
 
-              <td className="px-6 py-4">{item.price || "N/A"}</td>
+              <td className="px-6 py-4">{item.ticketPrice ? `₹${item.ticketPrice}` : "N/A"}</td>
               <td className="px-6 py-4">{item.createdAt?.slice(0, 10) || "-"}</td>
             </tr>
           );
         })}
+        {(!appointments || appointments.length === 0) && (
+          <tr>
+            <td colSpan={5} className="px-6 py-4 text-center">
+              No appointments yet
+            </td>
+          </tr>
+        )}
       </tbody>
     </table>
   );

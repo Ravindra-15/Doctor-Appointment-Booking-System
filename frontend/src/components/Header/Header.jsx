@@ -1,5 +1,6 @@
 import { useEffect, useRef, useContext } from 'react';
 import logo from '../../assets/images/logo.png';
+import avatar from '../../assets/images/avatar-icon.png';
  
 import { authContext } from "../../context/AuthContext";
 import { NavLink, Link } from 'react-router-dom';
@@ -29,20 +30,19 @@ const Header = () => {
     const headerRef = useRef(null)
     const menuRef = useRef(null)
     const { user, role, token } = useContext(authContext)
-    const handleStickyHeader = () => {
-        window.addEventListener('scroll', () => {
+    useEffect(() => {
+        const handleStickyHeader = () => {
+            if (!headerRef.current) return
             if (document.body.scrollTop > 80 || document.documentElement.scrollTop > 80) {
                 headerRef.current.classList.add('sticky__header')
             } else {
                 headerRef.current.classList.remove('sticky__header')
             }
-        })
-    }
+        }
 
-    useEffect(() => {
-        handleStickyHeader()
+        window.addEventListener('scroll', handleStickyHeader)
         return () => window.removeEventListener('scroll', handleStickyHeader)
-    })
+    }, [])
 
     const toggleMenu = () => menuRef.current.classList.toggle('show__menu')
 
@@ -84,7 +84,7 @@ const Header = () => {
                             token && user ? (<div>
                                 <Link to={`${role === 'doctor' ? '/doctors/profile/me' : '/users/profile/me'}`}>
                                     <figure className="w-[35px] h-[35px] rounded-full cursor-pointer">
-                                        <img src={user?.photo} className="w-full rounded-full" alt="" />
+                                        <img src={user?.photo || avatar} className="w-full h-full object-cover rounded-full" alt="" />
                                     </figure>
                                    
                                 </Link>

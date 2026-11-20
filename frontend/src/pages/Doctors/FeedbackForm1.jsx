@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { AiFillStar } from "react-icons/ai";
 import { useParams } from "react-router-dom";
-import { BASE_URL, token } from "../../config";
+import { BASE_URL, getToken } from "../../config";
 import HashLoader from "react-spinners/HashLoader";
 import { toast } from "react-toastify";
 
-const FeedbackForm = () => {
+const FeedbackForm = ({ onSuccess }) => {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [reviewText, setReviewText] = useState("");
@@ -21,6 +21,13 @@ const FeedbackForm = () => {
         setLoading(false);
         toast.error("Rating & Review Fields are required");
         return; // Added return to prevent execution of the fetch
+      }
+
+      const token = getToken();
+      if (!token) {
+        setLoading(false);
+        toast.error("Please login as a patient to give feedback");
+        return;
       }
 
       const res = await fetch(`${BASE_URL}/doctors/${id}/reviews`, {
@@ -41,7 +48,10 @@ const FeedbackForm = () => {
       // Handle success case here
       setLoading(false);
       toast.success("Review submitted successfully");
-      // Additional success logic...
+      setRating(0);
+      setHover(0);
+      setReviewText("");
+      if (onSuccess) onSuccess(); // reload the doctor so the new review shows up
     } catch (err) {
       setLoading(false);
       toast.error(err.message);
@@ -92,6 +102,7 @@ const FeedbackForm = () => {
           className="border border-solid border-[#0066ff34] focus:outline outline-primaryColor w-full px-4 py-3 rounded-md"
           rows="5"
           placeholder="Write your message"
+          value={reviewText}
           onChange={(e) => setReviewText(e.target.value)}
         ></textarea>
       </div>
@@ -100,6 +111,7 @@ const FeedbackForm = () => {
         className="btn"
         type="submit"
         onClick={handleSubmitReview}
+        disabled={loading}
       >
         {loading ? <HashLoader size={25} color="#fff" /> : "Submit Feedback"}
       </button>

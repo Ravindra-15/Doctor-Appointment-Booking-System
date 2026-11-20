@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useContext, useEffect, useState } from "react";
+import { authContext } from "../../context/AuthContext";
 
 import uploadImageToCloudinary from "../../utils/uploadCloudinary";
-import { BASE_URL, token } from "../../config";
+import { BASE_URL, getToken } from "../../config";
 import { toast } from "react-toastify";
 import HashLoader from "react-spinners/HashLoader";
 
-const Profile = ({ user }) => {
-  const [selectedFile, setSelectedFile] = useState(null);
+const Profile = ({ user, onUpdated }) => {
+  const { dispatch } = useContext(authContext);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -18,14 +18,14 @@ const Profile = ({ user }) => {
     bloodType: "",
   });
 
-  const navigate = useNavigate();
   useEffect(() => {
     setFormData({
-      name: user.name,
-      email: user.email,
-      photo: user.photo,
-      gender: user.gender,
-      bloodType: user.bloodType,
+      name: user?.name ?? "",
+      email: user?.email ?? "",
+      password: "",
+      photo: user?.photo ?? null,
+      gender: user?.gender ?? "not-specified",
+      bloodType: user?.bloodType ?? "",
     });
   }, [user]);
 
@@ -53,10 +53,10 @@ const Profile = ({ user }) => {
 
     try {
       const data = await uploadImageToCloudinary(file);
-      setSelectedFile(data.url);
-      setFormData({ ...formData, photo: data.url });
+      if (!data?.secure_url) throw new Error(data?.error?.message || "Upload failed");
+      setFormData((prev) => ({ ...prev, photo: data.secure_url }));
     } catch (err) {
-      toast.error("Photo upload failed!");
+      toast.error("Photo upload failed: " + err.message);
     } finally {
       setUploading(false); // ✅ stop loading
     }
@@ -71,11 +71,11 @@ const Profile = ({ user }) => {
         method: "put",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${getToken()}`,
         },
         body: JSON.stringify(formData),
       });
-      const { message } = await res.json();
+      const { message, data } = await res.json();
 
       if (!res.ok) {
         throw new Error(message);
@@ -83,7 +83,9 @@ const Profile = ({ user }) => {
 
       setLoading(false);
       toast.success(message);
-      navigate("/users/profile/me");
+      // update the header avatar/name and reload the account page
+      if (data) dispatch({ type: "UPDATE_USER", payload: { name: data.name, photo: data.photo } });
+      if (onUpdated) onUpdated();
     } catch (err) {
       toast.error(err.message);
       setLoading(false);
@@ -118,7 +120,7 @@ const Profile = ({ user }) => {
         <div className="mb-5">
           <input
             type="password"
-            placeholder="Password"
+            placeholder="New password (leave empty to keep current)"
             name="password"
             value={formData.password}
             onChange={handleInputChange}

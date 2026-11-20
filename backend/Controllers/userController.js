@@ -1,16 +1,22 @@
 import User from "../models/UserSchema.js";
 import Booking from "../models/BookingSchema.js";
 import Doctor from "../models/DoctorSchema.js";
+import { prepareUpdate } from "./utils/prepareUpdate.js";
 
 export const updateUser = async (req, res) => {
     const id = req.params.id;
 
+    if (req.userId !== id) {
+        return res.status(403).json({ success: false, message: "You can only update your own account" });
+    }
+
     try {
+        const update = await prepareUpdate(req.body);
         const updatedUser = await User.findByIdAndUpdate(
             id,
-            { $set: req.body },
+            { $set: update },
             { new: true }
-        );
+        ).select("-password");
 
         res.status(200).json({
             success: true,
@@ -27,6 +33,10 @@ export const updateUser = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
     const id = req.params.id;
+
+    if (req.userId !== id) {
+        return res.status(403).json({ success: false, message: "You can only delete your own account" });
+    }
 
     try {
         await User.findByIdAndDelete(
@@ -48,6 +58,10 @@ export const deleteUser = async (req, res) => {
 
 export const getSingleUser = async (req, res) => {
     const id = req.params.id;
+
+    if (req.userId !== id) {
+        return res.status(403).json({ success: false, message: "You can only view your own account" });
+    }
 
     try {
         const user = await User.findById(id).select("-password");
@@ -117,7 +131,10 @@ export const getMyAppointments = async (req, res) => {
         const bookings = await Booking.find({ user: req.userId });
 
         // step -2 : extract doctor ids from appointment bookings
-        const doctorIds = bookings.map(el => el.doctor.id);
+        // (skip bookings whose doctor account was deleted)
+        const doctorIds = bookings
+            .filter(el => el.doctor)
+            .map(el => el.doctor._id);
 
         // step - 3 : retrieve doctors using doctor ids
         const doctors = await Doctor.find({ _id: {$in:doctorIds } }).select(

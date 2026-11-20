@@ -1,17 +1,22 @@
 import Doctor from "../models/DoctorSchema.js";
 import Booking from "../models/BookingSchema.js";
+import { prepareUpdate } from "./utils/prepareUpdate.js";
 
 
 export const updateDoctor = async (req, res) => {
     const id = req.params.id;
-    console.log("➡️ Doctor ID:", id);
-    console.log("📦 Request Body:", req.body);
+
+    if (req.userId !== id) {
+        return res.status(403).json({ success: false, message: "You can only update your own account" });
+    }
+
     try {
+        const update = await prepareUpdate(req.body);
         const updatedDoctor = await Doctor.findByIdAndUpdate(
             id,
-            { $set: req.body },
+            { $set: update },
             { new: true }
-        );
+        ).select("-password");
 
         res.status(200).json({
             success: true,
@@ -31,6 +36,10 @@ export const updateDoctor = async (req, res) => {
 
 export const deleteDoctor = async (req, res) => {
     const id = req.params.id;
+
+    if (req.userId !== id) {
+        return res.status(403).json({ success: false, message: "You can only delete your own account" });
+    }
 
     try {
         await Doctor.findByIdAndDelete(
@@ -55,7 +64,10 @@ export const getSingleDoctor = async (req, res) => {
 
     try {
         const doctor = await Doctor.findById(id).populate("reviews").select("-password");
-        console.log("Fetching doctor with ID:", req.params.id);
+
+        if (!doctor) {
+            return res.status(404).json({ success: false, message: "No Doctor found" });
+        }
 
         res.status(200).json({
             success: true,

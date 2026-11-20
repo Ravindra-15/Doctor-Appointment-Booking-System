@@ -1,5 +1,4 @@
 import DoctorCard from "../../components/Doctors/DoctorCard";
-import { doctors } from "../../assets/data/doctors";
 import Testimonial from "../../components/Testimonial/Testimonial";
 import { BASE_URL } from "../../config";
 import useFetchData from "../../hooks/useFetchData";
@@ -13,14 +12,14 @@ const Doctors = () => {
   const [debounceQuery, setDebounceQuery] = useState("");
 
   const handleSearch = () => {
-    setQuery(query.trim());
-    console.log(handleSearch);
+    // search immediately when the button is clicked
+    setDebounceQuery(query.trim());
   };
 
   useEffect(() => {
     // Set a timer to update debounceQuery after 500ms of inactivity
     const timeout = setTimeout(() => {
-      setDebounceQuery(query);
+      setDebounceQuery(query.trim());
     }, 700);
 
     // Clean up the timer on each render before setting a new one
@@ -33,7 +32,7 @@ const Doctors = () => {
     data: doctors,
     loading,
     error,
-  } = useFetchData(`${BASE_URL}/doctors?query=${query}`);
+  } = useFetchData(`${BASE_URL}/doctors?query=${encodeURIComponent(debounceQuery)}`);
   return (
     <>
       {/* Search Section - Adjust padding/margin with py-[] and my-[] values */}
@@ -97,9 +96,14 @@ const Doctors = () => {
             {" "}
             {/* Changed gap from 10 to 8 */}
             {doctors.map((doctor) => (
-              <DoctorCard key={doctor.id} doctor={doctor} />
+              <DoctorCard key={doctor._id} doctor={doctor} />
             ))}
           </div>
+        )}
+        {!loading && !error && doctors.length === 0 && (
+          <h2 className="text-center text-[20px] font-semibold text-headingColor">
+            No doctors found
+          </h2>
         )}
       </div>
 

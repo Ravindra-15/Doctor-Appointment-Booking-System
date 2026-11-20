@@ -13,8 +13,7 @@ const MyAccount = () => {
 
   const { dispatch } = useContext(authContext);
   const [tab, setTab] = useState('bookings')
-  const { data: userData, loading, error } = useGetProfile(`${BASE_URL}/users/profile/me`)
-  console.log(userData, "userdata");
+  const { data: userData, loading, error, refetch } = useGetProfile(`${BASE_URL}/users/profile/me`)
 
   const handleLogout = () => {
     dispatch({
@@ -109,7 +108,7 @@ const MyAccount = () => {
             </div>
 
             {tab === "bookings" && <MyBookings />}
-            {tab === "settings" && <Profile user={userData} />}
+            {tab === "settings" && <Profile user={userData} onUpdated={refetch} />}
 
 
 

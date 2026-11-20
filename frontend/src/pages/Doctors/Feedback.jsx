@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import avatar from "../../assets/images/avatar-icon.png";
 import { AiFillStar } from "react-icons/ai";
 import { formatDate } from "../../utils/formateDate";
 import FeedbackForm1 from "./FeedbackForm1"; // Updated to reflect new file name
 
-const Feedback = ({ reviews, totalRating }) => {
+const Feedback = ({ reviews, totalRating, onReviewAdded }) => {
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
 
   return (
@@ -20,7 +20,7 @@ const Feedback = ({ reviews, totalRating }) => {
               <figure className="w-10 h-10 rounded-full">
                 <img
                   className="w-full"
-                  src={review.user?.photo}
+                  src={review.user?.photo || avatar}
                   alt="User avatar"
                 />
               </figure>
@@ -52,7 +52,7 @@ const Feedback = ({ reviews, totalRating }) => {
           </button>
         </div>
       )}
-      {showFeedbackForm && <FeedbackForm1 />} {/* Updated to FeedbackForm1 */}
+      {showFeedbackForm && <FeedbackForm1 onSuccess={onReviewAdded} />}
     </div>
   );
 };

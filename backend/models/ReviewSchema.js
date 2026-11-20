@@ -46,14 +46,14 @@ reviewSchema.statics.calcAverageRatings = async function (doctorId) {
     },
   ]);
 
-  await Doctor.findByIdAndUpdate(doctorId, {
-    totalRating: stats[0].numOfRating,
-    averageRating: stats[0].avgRating,
-});
+  const totalRating = stats[0]?.numOfRating || 0;
+  const averageRating = stats[0] ? Math.round(stats[0].avgRating * 10) / 10 : 0;
+
+  await Doctor.findByIdAndUpdate(doctorId, { totalRating, averageRating });
 };
 
-reviewSchema.post("save", function () {
-  this.constructor.calcAverageRatings(this.doctor);
+reviewSchema.post("save", async function () {
+  await this.constructor.calcAverageRatings(this.doctor);
 });
 
 export default mongoose.model("Review", reviewSchema);

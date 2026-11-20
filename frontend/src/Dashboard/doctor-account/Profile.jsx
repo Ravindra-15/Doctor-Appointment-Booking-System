@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { AiOutlineDelete } from "react-icons/ai";
 import uploadImageToCloudinary from "../../utils/uploadCloudinary";
-import { BASE_URL, token } from "../../config";
+import { BASE_URL, getToken } from "../../config";
 import { toast } from "react-toastify";
 import { useEffect } from "react";
 
 
-const Profile = ({ doctorData }) => {
+const Profile = ({ doctorData, onUpdated }) => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -25,19 +25,21 @@ const Profile = ({ doctorData }) => {
 
   useEffect(() => {
     // console.log("👨‍⚕️ doctorData:", doctorData);
+    // "?? default" keeps every input controlled (no React warnings, no crashes on .map)
     setFormData({
-        name: doctorData?.name,
-        email: doctorData?.email,
-        phone: doctorData?.phone,
-        bio: doctorData?.bio,
-        gender: doctorData?.gender,
-        specialization: doctorData?.specialization,
-        ticketPrice: doctorData?.ticketPrice,
-        qualifications: doctorData?.qualifications,
-        experiences: doctorData?.experiences,
-        timeSlots: doctorData?.timeSlots,
-        about: doctorData?.about,
-        photo: doctorData?.photo,
+        name: doctorData?.name ?? "",
+        email: doctorData?.email ?? "",
+        password: "",
+        phone: doctorData?.phone ?? "",
+        bio: doctorData?.bio ?? "",
+        gender: doctorData?.gender ?? "",
+        specialization: doctorData?.specialization ?? "",
+        ticketPrice: doctorData?.ticketPrice ?? 0,
+        qualifications: doctorData?.qualifications ?? [],
+        experiences: doctorData?.experiences ?? [],
+        timeSlots: doctorData?.timeSlots ?? [],
+        about: doctorData?.about ?? "",
+        photo: doctorData?.photo ?? null,
     });
 }, [doctorData]); 
 
@@ -49,8 +51,15 @@ const Profile = ({ doctorData }) => {
 
   const handleFileInputChange = async (event) => {
     const file = event.target.files[0];
-    const data = await uploadImageToCloudinary(file);
-    setFormData({ ...formData, photo: data?.url });
+    if (!file) return;
+
+    try {
+      const data = await uploadImageToCloudinary(file);
+      if (!data?.secure_url) throw new Error(data?.error?.message || "Upload failed");
+      setFormData((prev) => ({ ...prev, photo: data.secure_url }));
+    } catch (err) {
+      toast.error("Photo upload failed: " + err.message);
+    }
   };
 
   const updateProfileHandler = async (e) => {
@@ -61,7 +70,7 @@ const Profile = ({ doctorData }) => {
         method: "PUT",
         headers: {
           "content-type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${getToken()}`,
         },
         body: JSON.stringify(formData),
       });
@@ -73,6 +82,7 @@ const Profile = ({ doctorData }) => {
       }
 
       toast.success(result.message);
+      if (onUpdated) onUpdated(); // reload dashboard data
     } catch (err) {
       toast.error(err.message);
     }
@@ -93,9 +103,9 @@ const Profile = ({ doctorData }) => {
     const { name, value } = event.target;
 
     setFormData((prevFormData) => {
-      const updateItems = [...prevFormData[key]];
-
-      updateItems[index][name] = value;
+      const updateItems = prevFormData[key].map((item, i) =>
+        i === index ? { ...item, [name]: value } : item
+      );
 
       return {
         ...prevFormData,
@@ -180,7 +190,7 @@ const Profile = ({ doctorData }) => {
         Profile Information
       </h2>
 
-      <form>
+      <form onSubmit={updateProfileHandler}>
         <div className="mb-5">
           <p className="form__label">Name</p>
           <input
@@ -328,6 +338,7 @@ const Profile = ({ doctorData }) => {
                 </div>
 
                 <button
+                  type="button"
                   onClick={(e) => deleteQualification(e, index)}
                   className="bg-red-600 p-2 rounded-full text-white text-[18px] mt-2 mb-[30px]"
                 >
@@ -337,6 +348,7 @@ const Profile = ({ doctorData }) => {
             </div>
           ))}
           <button
+            type="button"
             onClick={addQualification}
             className="bg-[#000] text-white py-2 px-5 rounded h-fit cursor-pointer"
           >
@@ -394,6 +406,7 @@ const Profile = ({ doctorData }) => {
                 </div>
 
                 <button
+                  type="button"
                   onClick={(e) => deleteExperience(e, index)}
                   className="bg-red-600 p-2 rounded-full text-white text-[18px] mt-2 mb-[30px]"
                 >
@@ -403,6 +416,7 @@ const Profile = ({ doctorData }) => {
             </div>
           ))}
           <button
+            type="button"
             onClick={addExperience}
             className="bg-[#000] text-white py-2 px-5 rounded h-fit cursor-pointer"
           >
@@ -455,6 +469,7 @@ const Profile = ({ doctorData }) => {
                   </div>
                   <div className="flex items-center">
                     <button
+                      type="button"
                       onClick={(e) => deleteTimeSlot(e, index)}
                       className="bg-red-600 p-2 rounded-full text-white text-[18px]  cursor-pointer mt-6"
                     >
@@ -466,6 +481,7 @@ const Profile = ({ doctorData }) => {
             </div>
           ))}
           <button
+            type="button"
             onClick={addTimeSlot}
             className="bg-[#000] text-white py-2 px-5 rounded h-fit cursor-pointer"
           >
@@ -515,7 +531,6 @@ const Profile = ({ doctorData }) => {
         <div className="mt-7">
           <button
             type="submit"
-            onClick={updateProfileHandler}
             className="bg-primaryColor text-white text-[18px] leading-[30px] w-full py-3 px-4 rounded-lg "
           >
             Update Profile

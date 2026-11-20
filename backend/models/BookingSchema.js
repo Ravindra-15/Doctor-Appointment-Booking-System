@@ -13,6 +13,7 @@ const bookingSchema = new mongoose.Schema(
       required: true,
     },
     ticketPrice: { type: String, required: true },
+    session: { type: String },
     status: {
       type: String,
       enum: ["pending", "approved", "cancelled"],

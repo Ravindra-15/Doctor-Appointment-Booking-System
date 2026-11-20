@@ -7,11 +7,15 @@ export const getCheckoutSession = async (req, res) => {
   try {
     const doctor = await Doctor.findById(req.params.doctorId);
 
-    // try to find user from both User and Doctor collections
-    let user = await User.findById(req.userId);
-    if (!user) {
-      user = await Doctor.findById(req.userId);
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: "Doctor not found" });
     }
+
+    if (!doctor.ticketPrice) {
+      return res.status(400).json({ success: false, message: "This doctor has not set a ticket price yet." });
+    }
+
+    const user = await User.findById(req.userId);
 
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
@@ -19,23 +23,27 @@ export const getCheckoutSession = async (req, res) => {
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+    // Both URLs must point to the React app, not to this API server
+    const clientUrl = (process.env.CLIENT_SITE_URL || "http://localhost:5173").replace(/\/$/, "");
+
+    // Stripe rejects empty strings / undefined values here, so only send what exists
+    const productData = { name: doctor.name };
+    if (doctor.bio) productData.description = doctor.bio;
+    if (doctor.photo) productData.images = [doctor.photo];
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
-      success_url: `http://localhost:5173/checkout-success`,
-      cancel_url: `${req.protocol}://${req.get('host')}/doctors/${doctor.id}`,
+      success_url: `${clientUrl}/checkout-success`,
+      cancel_url: `${clientUrl}/doctors/${doctor.id}`,
       customer_email: user.email,
       client_reference_id: req.params.doctorId,
       line_items: [
         {
           price_data: {
             currency: 'INR',
-            unit_amount: doctor.ticketPrice * 100,
-            product_data: {
-              name: doctor.name,
-              description: doctor.bio,
-              images: [doctor.photo],
-            },
+            unit_amount: Math.round(Number(doctor.ticketPrice) * 100),
+            product_data: productData,
           },
           quantity: 1,
         },

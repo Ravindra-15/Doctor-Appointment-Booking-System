@@ -9,20 +9,19 @@ import DoctorAbout from "../../pages/Doctors/DoctorAbout";
 import Profile from "./Profile";
 import Appointmets from "./Appointments";
 const Dashboard = () => {
-  const { data, loading, error } = useGetProfile(
+  const { data, loading, error, refetch } = useGetProfile(
     `${BASE_URL}/doctors/profile/me`
   );
-  console.log("Request URL:", `${BASE_URL}/doctors/profile/me`);
   const [tab, setTab] = useState("overview");
 
   return (
     <section>
       <div className="max-w-[1170px] px-5 mx-auto">
         {loading && <Loader />}
-        {error && !loading && <Error />}
+        {error && !loading && <Error errMessage={error} />}
         {!loading && !error && (
           <div className="grid lg:grid-cols-3 gap-[30px] lg:gap-[50px]">
-            <Tabs tab={tab} setTab={setTab} />
+            <Tabs tab={tab} setTab={setTab} doctorId={data?._id} />
             <div className="lg:col-span-2">
               {data?.isApproved === "pending" && (
                 <div className="flex items-center p-4 mb-4 text-yellow-800 bg-yellow-50 rounded-lg">
@@ -84,7 +83,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <DoctorAbout
-                      name={data.about}
+                      name={data.name}
                       about={data.about}
                       qualifications={data.qualifications}
                       experiences={data.experiences}
@@ -95,7 +94,7 @@ const Dashboard = () => {
                 {tab === "appointments" && (
                   <Appointmets appointments={data.appointments} />
                 )}
-                {tab === "profile" && <Profile doctorData={data} />}
+                {tab === "profile" && <Profile doctorData={data} onUpdated={refetch} />}
               </div>
             </div>
           </div>

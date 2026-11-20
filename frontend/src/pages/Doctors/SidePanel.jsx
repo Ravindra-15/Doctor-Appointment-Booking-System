@@ -1,8 +1,12 @@
+import { useContext, useState } from "react";
 import convertTime from "../../utils/convertTime";
-import { BASE_URL } from "../../config";
+import { BASE_URL, getToken } from "../../config";
 import { toast } from "react-toastify";
+import { authContext } from "../../context/AuthContext";
 
 const SidePanel = ({ doctorId, ticketPrice, timeSlots }) => {
+  const { role } = useContext(authContext);
+  const [loading, setLoading] = useState(false);
   // const bookingHandler = async () => {
   //   try {
   //     const res = await fetch(
@@ -31,12 +35,19 @@ const SidePanel = ({ doctorId, ticketPrice, timeSlots }) => {
 
   const bookingHandler = async () => {
   try {
-    const token = localStorage.getItem('token'); // ✅ retrieve token here
+    const token = getToken();
 
     if (!token) {
-      toast.error("User not authenticated");
+      toast.error("Please login to book an appointment");
       return;
     }
+
+    if (role !== "patient") {
+      toast.error("Only patients can book appointments");
+      return;
+    }
+
+    setLoading(true);
 
     const res = await fetch(`${BASE_URL}/bookings/checkout-session/${doctorId}`, {
       method: 'POST',
@@ -51,12 +62,14 @@ const SidePanel = ({ doctorId, ticketPrice, timeSlots }) => {
       throw new Error(data.message + ' Please try again');
     }
 
-    if (data.session.url) {
+    if (data.session?.url) {
       window.location.href = data.session.url;
     }
 
   } catch (err) {
     toast.error(err.message);
+  } finally {
+    setLoading(false);
   }
 };
 
@@ -81,18 +94,18 @@ const SidePanel = ({ doctorId, ticketPrice, timeSlots }) => {
               className="flex items-center justify-between mb-2 p-2 rounded-md hover:bg-gray-50 transition-colors duration-200"
             >
               <p className="text-[15px] leading-6 text-textColor font-semibold">
-                {item.day.charAt(0).toUpperCase() + item.day.slice(1)}
+                {item.day ? item.day.charAt(0).toUpperCase() + item.day.slice(1) : "-"}
               </p>
               <p className="text-[15px] leading-6 text-textColor font-semibold">
-                {convertTime(item.startingTime)} -{" "}
-                {convertTime(item.endingTime)}
+                {item.startingTime ? convertTime(item.startingTime) : "-"} -{" "}
+                {item.endingTime ? convertTime(item.endingTime) : "-"}
               </p>
             </li>
           ))}
         </ul>
       </div>
-      <button onClick={bookingHandler}  className="btn px-2 w-full rounded hover:scale-[1.02] active:scale-[0.98] transition-transform">
-        Book Appointment
+      <button onClick={bookingHandler} disabled={loading} className="btn px-2 w-full rounded hover:scale-[1.02] active:scale-[0.98] transition-transform disabled:opacity-60">
+        {loading ? "Redirecting to payment..." : "Book Appointment"}
       </button>
     </div>
   );

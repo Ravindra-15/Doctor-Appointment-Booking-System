@@ -17,6 +17,7 @@ const DoctorDetails = () => {
     data: doctor,
     loading,
     error,
+    refetch,
   } = useFetchData(`${BASE_URL}/doctors/${id}`);
 
   const {
@@ -32,13 +33,13 @@ const DoctorDetails = () => {
     specialization,
     ticketPrice,
     photo,
-  } = doctor;
+  } = doctor || {};
 
   return (
     <section>
       <div className="max-w-[1170px] px-5 mx-auto">
         {loading && <Loader></Loader>}
-        {error && <Error></Error>}
+        {error && <Error errMessage={error} />}
         {!loading && !error && (
           <div className="grid md:grid-cols-3 gap-[50px]">
             <div className="md:col-span-2">
@@ -101,11 +102,11 @@ const DoctorDetails = () => {
                     experiences={experiences}
                   />
                 )}
-                {tab === "feedback" && <Feedback reviews={reviews} totalRating={totalRating} />}
+                {tab === "feedback" && <Feedback reviews={reviews} totalRating={totalRating} onReviewAdded={refetch} />}
               </div>
             </div>
             <div>
-              <SidePanel doctorId={doctor._id} ticketPrice={ticketPrice} timeSlots = {timeSlots} />
+              <SidePanel doctorId={doctor?._id} ticketPrice={ticketPrice} timeSlots = {timeSlots} />
             </div>
           </div>
         )}

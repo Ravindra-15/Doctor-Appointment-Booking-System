@@ -16,48 +16,46 @@ export const register = async (req, res) => {
     const { email, password, name, role, photo, gender } = req.body;
 
     try {
-        let user = null;
-
-        if (role === 'patient') { // Changed = to ===
-            user = await User.findOne({ email });
-        } else if (role === 'doctor') { // Changed = to ===
-            user = await Doctor.findOne({ email });
+        if (!name || !email || !password) {
+            return res.status(400).json({ success: false, message: 'Name, email and password are required' });
         }
 
-        // Check if user exists
-        if (user) {
-            return res.status(400).json({ message: 'User already exists' });
+        if (role !== 'patient' && role !== 'doctor') {
+            return res.status(400).json({ success: false, message: 'Role must be patient or doctor' });
+        }
+
+        // Check both collections: login looks up the email in both,
+        // so the same email must not exist as patient AND doctor
+        const existingUser =
+            (await User.findOne({ email })) || (await Doctor.findOne({ email }));
+
+        if (existingUser) {
+            return res.status(400).json({ success: false, message: 'User already exists' });
         }
 
         // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        if (role === 'patient') { // Changed = to ===
-            user = new User({
-                name,
-                email,
-                password: hashedPassword,
-                photo,
-                gender,
-                role
-            });
-        } else if (role === 'doctor') { // Changed = to ===
-            user = new Doctor({
-                name,
-                email,
-                password: hashedPassword,
-                photo,
-                gender,
-                role
-            });
-        }
+        // "not-specified" (the signup form default) is not a valid enum value
+        const validGender = ['male', 'female', 'other'].includes(gender) ? gender : undefined;
+
+        const Model = role === 'patient' ? User : Doctor;
+        const user = new Model({
+            name,
+            email,
+            password: hashedPassword,
+            photo,
+            gender: validGender,
+            role
+        });
 
         await user.save();
 
         res.status(200).json({ success: true, message: 'User successfully created' });
 
     } catch (err) {
+        console.error('Register error:', err);
         res.status(500).json({ success: false, message: 'Internal server error. Try again' });
     }
 };
@@ -96,7 +94,7 @@ export const login = async (req, res) => {
         // get token 
 
         const token = generateToken(user);
-        const {password, role, appointmens, ...rest} = user._doc
+        const { password, role, appointments, ...rest } = user._doc
         res.status(200).json({ success: true, message: 'Successfully login', token, data:{...rest}, role });
 
     

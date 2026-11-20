@@ -1,122 +1,50 @@
-import { useEffect, useState } from 'react';
-import { token } from "../config";
- 
+import { useCallback, useEffect, useState } from 'react';
+import { getToken } from "../config";
 
 const useFetchData = url => {
     const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [reloadKey, setReloadKey] = useState(0);
 
     useEffect(() => {
-        const fetchData = async () => { 
+        // ignore responses from an outdated url (e.g. fast typing in search)
+        let ignore = false;
+
+        const fetchData = async () => {
             setLoading(true);
+            setError(null);
             try {
+                const token = getToken();
                 const res = await fetch(url, {
-                    headers: { Authorization: `Bearer ${token}` }
-                })
-                
+                    headers: token ? { Authorization: `Bearer ${token}` } : {}
+                });
+
                 const result = await res.json();
-                
+
                 if (!res.ok) {
                     throw new Error(result.message + '🤯');
                 }
-                
-                setData(result.data);
-                setLoading(false);
+
+                if (!ignore) setData(result.data);
             } catch (err) {
-                
-                setError(err.message);
-                setLoading(false);
+                if (!ignore) setError(err.message);
+            } finally {
+                if (!ignore) setLoading(false);
             }
-        }
+        };
 
         fetchData();
-    }, [url]);
 
-    return { data, loading, error }; 
+        return () => {
+            ignore = true;
+        };
+    }, [url, reloadKey]);
+
+    // call this to load the data again (e.g. after an update)
+    const refetch = useCallback(() => setReloadKey(k => k + 1), []);
+
+    return { data, loading, error, refetch };
 };
- 
+
 export default useFetchData;
-
-// // import { useEffect, useState } from 'react';
-// // import { token } from "../config";
-
-// // const useFetchData = (url) => {
-// //     const [data, setData] = useState([]);
-// //     const [loading, setLoading] = useState(false);
-// //     const [error, setError] = useState(null);
-
-// //     useEffect(() => {
-// //         const fetchData = async () => {
-// //             setLoading(true);
-// //             try {
-// //                 const res = await fetch(url, {
-// //                     headers: { 
-// //                         Authorization: `Bearer ${token}`,
-// //                         'Content-Type': 'application/json'
-// //                     }
-// //                 });
-                
-// //                 const result = await res.json();
-                
-// //                 if (!res.ok) {
-// //                     throw new Error(result.message || 'Failed to fetch data');
-// //                 }
-                
-// //                 setData(result.data);
-// //                 setLoading(false);
-// //             } catch (err) {
-// //                 setError(err.message);
-// //                 setLoading(false);
-// //             }
-// //         };
-
-// //         fetchData();
-// //     }, [url]);
-
-// //     return { data, loading, error };
-// // };
-
-// // // Export as both default and named
-// // export const useGetProfile = useFetchData;
-// // export default useFetchData;
-
-//chatgpt new code
-
-// import { useEffect, useState } from 'react';
-// import { token } from "../config";
-
-// const useFetchData = url => {
-//     const [data, setData] = useState(null);    // 🔥 Make it NULL instead of []
-//     const [loading, setLoading] = useState(false);
-//     const [error, setError] = useState(null);
-
-//     useEffect(() => {
-//         const fetchData = async () => {
-//             setLoading(true);
-//             try {
-//                 const res = await fetch(url, {
-//                     headers: { Authorization: `Bearer ${token}` }
-//                 });
-                
-//                 const result = await res.json();
-
-//                 if (!res.ok) {
-//                     throw new Error(result.message || 'Failed to fetch data');
-//                 }
-                
-//                 setData(result.data);   // 🔥 store object
-//             } catch (err) {
-//                 setError(err.message);
-//             } finally {
-//                 setLoading(false);
-//             }
-//         };
-
-//         fetchData();
-//     }, [url]);
-
-//     return { data, loading, error }; 
-// };
-
-// export default useFetchData;
