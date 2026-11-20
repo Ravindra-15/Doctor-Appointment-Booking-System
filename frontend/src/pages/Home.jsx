@@ -38,7 +38,7 @@ const Home = () => {
                   quia earum amet architecto, modi odio. Soluta unde ducimus
                   perferendis?
                 </p>
-                <button className="btn">Request an Appointment</button>
+                <Link to="/request-appointment" className="btn inline-block">Request an Appointment</Link>
               </div>
 
               {/*-------hero counter */}
@@ -155,7 +155,7 @@ const Home = () => {
                 </p>
 
                 <Link
-                  to="/doctors"
+                  to="/locations"
                   className="w-[44px] h-[44px] rounded-full border border-solid border-[#181A1E] mt-[30px]
                   mx-auto flex items-center justify-center group hover:bg-primaryColor hover:border-none"
                 >
@@ -179,7 +179,7 @@ const Home = () => {
                 </p>
 
                 <Link
-                  to="/doctors"
+                  to="/request-appointment"
                   className="w-[44px] h-[44px] rounded-full border border-solid border-[#181A1E] mt-[30px]
                   mx-auto flex items-center justify-center group hover:bg-primaryColor hover:border-none"
                 >
@@ -229,7 +229,7 @@ const Home = () => {
                   online scheduling tool to select an appointment time.
                 </li>
               </ul>
-              <Link to="/">
+              <Link to="/request-appointment">
                 <button className="btn">Learn more</button>
               </Link>
             </div>

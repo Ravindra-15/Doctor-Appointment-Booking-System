@@ -37,7 +37,7 @@ const About = () => {
                         <p className="text__para mt-[30px]">
                             Our best is something we strive for each day, caring for our patients—not looking back at what we accomplished but towards what we can do tomorrow. Providing the best. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aliquid, modi?
                         </p>
-                        <Link to='/'>
+                        <Link to='/about'>
                             <button className="btn">Learn More</button>
                         </Link>
                         

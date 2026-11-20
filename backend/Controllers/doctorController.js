@@ -108,9 +108,10 @@ export const getAllDoctor = async (req, res) => {
             data: doctors
         });
     } catch (err) {
-        res.status(404).json({
+        console.error("getAllDoctor error:", err.message);
+        res.status(500).json({
             success: false,
-            message: "Not found"
+            message: "Could not load doctors (database error)"
         });
     }
 };

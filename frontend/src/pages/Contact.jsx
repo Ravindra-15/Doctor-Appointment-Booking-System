@@ -1,7 +1,25 @@
-import React from "react"; 
-import contactAnimation from "../assets/images/contactUsAnimation.mp4"; 
+import { useState } from "react";
+import { toast } from "react-toastify";
+import contactAnimation from "../assets/images/contactUsAnimation.mp4";
+
+const emptyForm = { email: "", subject: "", message: "" };
 
 const Contact = () => {
+    const [formData, setFormData] = useState(emptyForm);
+
+    const handleChange = (e) => setFormData({ ...formData, [e.target.id]: e.target.value });
+
+    // the form used to do a full page reload (action="#") and lose everything
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!formData.email || !formData.subject || !formData.message) {
+            toast.error("Please fill all fields");
+            return;
+        }
+        toast.success("Thanks for reaching out! We'll get back to you soon.");
+        setFormData(emptyForm);
+    };
+
     return (
         <section className="py-10">
             <div className="px-4 mx-auto max-w-screen-md">
@@ -31,7 +49,7 @@ const Contact = () => {
                 </p>
 
                 {/* Form */}
-                <form action="#" className="space-y-8">
+                <form onSubmit={handleSubmit} className="space-y-8">
 
                     <div className="transition-all duration-300 hover:scale-[1.02]">
                         <label htmlFor="email" className="form__label">
@@ -40,6 +58,8 @@ const Contact = () => {
                         <input
                             type="email"
                             id="email"
+                            value={formData.email}
+                            onChange={handleChange}
                             placeholder="example@gmail.com"
                             className="form__input mt-1 focus:ring-2 focus:ring-primaryColor transition-all duration-300 hover:shadow-[0_0_30px_#99f2e5]"
                         />
@@ -52,6 +72,8 @@ const Contact = () => {
                         <input
                             type="text"
                             id="subject"
+                            value={formData.subject}
+                            onChange={handleChange}
                             placeholder="Let us know how we can help you"
                             className="form__input mt-1 focus:ring-2 focus:ring-primaryColor transition-all duration-300 hover:shadow-[0_0_30px_#99f2e5]"
                         />
@@ -64,6 +86,8 @@ const Contact = () => {
                         <textarea
                             rows="6"
                             id="message"
+                            value={formData.message}
+                            onChange={handleChange}
                             placeholder="Leave a comment..."
                             className="form__input mt-1 focus:ring-2 focus:ring-primaryColor transition-all duration-300 hover:shadow-[0_0_30px_#99f2e5]"
                         />
@@ -82,5 +106,5 @@ const Contact = () => {
         </section>
     );
 };
- 
+
 export default Contact;
